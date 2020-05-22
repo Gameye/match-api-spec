@@ -19,7 +19,7 @@ jobs:
   publish-static:
     docker: [image: circleci/python:3.6]
     environment:
-      BUCKET: csgo-spec.gameye.com
+      BUCKET: api-spec.gameye.com
     steps:
       - run: sudo pip install awscli
       - attach_workspace: { at: . }
