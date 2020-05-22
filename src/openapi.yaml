@@ -3,12 +3,6 @@ openapi: 3.0.0
 info:
   title: Gameye Match API
   version: "0.0.0-local"
-  description: |
-    # Authentication
-    We use Bearer Tokens for authentication. 
-    You must send this token in the Authorization header in all requests.
-
-    ```Authorization: Bearer <token>```
 
 servers:
   - url: https://api.gameye.com
@@ -362,6 +356,11 @@ components:
       type: http
       scheme: bearer
       bearerFormat: token
+      description: |
+        We use Bearer Tokens for authentication. 
+        You must send this token in the Authorization header in all requests.
+
+        ```Authorization: Bearer <token>```
 
 externalDocs:
   url: https://docs.gameye.com
