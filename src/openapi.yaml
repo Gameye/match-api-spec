@@ -3,6 +3,19 @@ openapi: 3.0.0
 info:
   title: Gameye Match API
   version: "0.0.0-local"
+  description: |
+
+    The Gameye Match API let's you spawn containerized game servers without having to worry about geographic capacity 
+    or scalability. All API endpoints together offer a complete suite of features to host a dedicated server based multiplayer game.
+
+    # Authentication
+    We use Bearer Tokens for authentication. 
+    You must send this token in the Authorization header in all requests.
+
+    ```Authorization: Bearer <token>```
+  x-logo:
+    url: https://static.gameye.com/images/android-chrome-512x512.png
+    altText": "Gameye Logo"
 
 servers:
   - url: https://api.gameye.io
@@ -17,7 +30,15 @@ paths:
       operationId: start-match
       summary: "Create a match"
       description: |
-        Create a new on-demand game server
+        Create a new on-demand game server.
+
+        The `config` object can be used to pass any dynamic parameters directly to the game server executable.
+        Either as a startup parameters, configfile or environment variable. For more info see https://docs.gameye.com/docs/using-the-igniter-tool
+
+        > ### Important
+        > In extreme cases it can take up 50 seconds to start a server, after which we produce a time-out.
+        > Please adjust the time-out settings of your client accordingly.
+
       requestBody:
         required: true
         content:
@@ -53,6 +74,8 @@ paths:
                   minItems: 1
                   description: |
                     location id
+
+                    for available locations see https://docs.gameye.com/docs/choosing-your-server-locations
                 templateKey:
                   type: string
                   minLength: 1
@@ -69,6 +92,14 @@ paths:
                   minLength: 1
                   description: "URL to call when the match has ended, optional"
                   example: "https://yourbackend/matchid"
+                restart:
+                  type: boolean
+                  description: "A flag that indicates whether the match should always restart or not. This is an optional field and will yield 'false' if not provided."
+                sortAdvantages:
+                  type: array
+                  description: "A list of advantages to sort on whilst searching for an appropriate machine to run the match on."
+                  items: { type: string }
+                  default: ["price"]
             example:
               {
                 "matchKey": "my-awesome-match",
@@ -77,6 +108,8 @@ paths:
                 "templateKey": "deathmatch",
                 "config": { "map": "de_dust" },
                 "endCallbackUrl": "https://mybackend/matchid",
+                "restart": true,
+                "sortAdvantages": ["price"],
               }
       responses:
         "200":
@@ -113,7 +146,9 @@ paths:
       operationId: stop-match
       summary: "Stop a match"
       description: |
-        Force shutdown the game server
+        Force shutdown the game server.
+
+        The game server process inside the container will receive `SIGTERM`.
 
         > ### Important
         > 
@@ -149,7 +184,9 @@ paths:
       operationId: get-matches
       summary: "Get all matches"
       description: |
-        Fetch a list of all active sessions
+        Fetches a list of all active matches.
+
+        Note that this list only displays **active** matches. When the game server process stops, the match is almost instantly removed from the list.
       responses:
         "200":
           description: |
@@ -191,7 +228,14 @@ paths:
       operationId: log
       summary: "Get match logs"
       description: |
-        Fetch the console log output of the game server
+        Fetch the output that the game server writes to standard out (stdout).
+
+        This endpoint can used to provide secure and automated access to debug server related issues.
+
+        > ### Important
+        > Note that the logs can only be fetched after the match is stopped and that the logs are available 
+        > up to **four** hours after the match has entered the stopped state.
+
       parameters:
         - name: matchKey
           in: query
@@ -236,8 +280,8 @@ paths:
 
         > ### Important
         > 
-        > Statistics are disabled by default, please contact our support department if you would like to expose statistics of your game. 
-        > The stats are only availble post-match unless you connect via our realtime API, which is available on a request basis.
+        > Statistics are disabled by default, please contact our support department if you would like to expose statistics from your game.
+        > The stats are only availble post-match.
       parameters:
         - name: matchKey
           in: query
@@ -306,7 +350,7 @@ paths:
           description: |
             Match was not found
 
-  /query/artifacts:
+  /artifacts:
     get:
       operationId: artifacts
       summary: "Get match artifacts"
@@ -343,7 +387,7 @@ paths:
           description: |
             Downloading artifact in the .tar format
           content:
-            application/octet-stream: {}
+            application/x-tar: {}
         "401":
           description: |
             You are not authorized
