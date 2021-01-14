@@ -5,7 +5,7 @@ info:
   version: "0.0.0-local"
 
 servers:
-  - url: https://api.gameye.com
+  - url: https://api.gameye.io
 
 security:
   - api-token: []
@@ -13,6 +13,7 @@ security:
 paths:
   /command/start-match:
     post:
+      deprecated: true
       operationId: start-match
       summary: "Create a match"
       description: |
@@ -349,6 +350,67 @@ paths:
         "404":
           description: |
             Match was not found
+
+  /session:
+    post:
+      operationId: session-run
+      requestBody:
+        required: true
+        content:
+          "application/json":
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - id
+                - location
+                - image
+                - env
+                - args
+                - restart
+              properties:
+                id: { type: string, minLength: 1 }
+                location: { type: string, minLength: 1 }
+                image: { type: string, minLength: 1 }
+                env:
+                  type: object
+                  additionalProperties: { type: string, minLength: 1 }
+                args:
+                  type: array
+                  items: { type: string, minLength: 1 }
+                restart: { type: boolean }
+      responses:
+        "201":
+          description: |
+            The session is started!
+          content:
+            "application/json":
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - host
+                  - ports
+                properties:
+                  host:
+                    type: string
+                  ports:
+                    type: array
+                    items:
+                      type: object
+                      additionalProperties: false
+                      required:
+                        - type
+                        - container
+                        - host
+                      properties:
+                        type: { type: string, enum: [tcp, udp] }
+                        container: { type: integer, minimum: 1, maximum: 65535 }
+                        host: { type: integer, minimum: 32768, maximum: 65535 }
+
+        "420":
+          description: |
+            This session can currently not be started in the provided location. This could also be the result of starting too many sessions in a short period of time. Please try again later!
 
 components:
   securitySchemes:
