@@ -398,6 +398,7 @@ paths:
   /session:
     post:
       operationId: session-run
+      summary: Run a session
       requestBody:
         required: true
         content:
