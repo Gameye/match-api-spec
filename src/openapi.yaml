@@ -384,6 +384,15 @@ paths:
             Match has already been stopped
 
   /query/match:
+    parameters:
+      - name: filter
+        in: query
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
     get:
       operationId: get-matches
       summary: "Get all matches"
