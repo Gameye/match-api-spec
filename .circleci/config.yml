@@ -96,3 +96,9 @@ workflows:
           filters:
             branches: { ignore: /.*/ }
             tags: { only: /^v\d+\.\d+\.\d+$/ }
+      - publish-static:
+          context: authorized
+          requires: [build]
+          filters:
+            branches: { ignore: /.*/ }
+            tags: { only: /^v\d+\.\d+\.\d+$/ }
