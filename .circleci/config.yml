@@ -2,7 +2,7 @@ version: 2.1
 
 jobs:
   install:
-    docker: [image: circleci/node:14]
+    docker: [image: circleci/node:16]
     steps:
       - checkout
       - run: npm install
@@ -11,7 +11,7 @@ jobs:
           paths: [node_modules]
 
   build:
-    docker: [image: circleci/node:14]
+    docker: [image: circleci/node:16]
     steps:
       - checkout
       - attach_workspace: { at: . }
@@ -21,18 +21,59 @@ jobs:
           paths: [out]
 
   test:
-    docker: [image: circleci/node:14]
+    docker: [image: circleci/node:16]
     steps:
       - checkout
       - attach_workspace: { at: . }
       - run: ./test
 
   publish-npm:
-    docker: [image: circleci/node:14]
+    docker: [image: circleci/node:16]
     steps:
       - attach_workspace: { at: . }
       - run: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
       - run: ( cd out/npm ; npm publish )
+
+  publish-static:
+    docker: [image: circleci/python:3.6]
+    environment:
+      BUCKET: api-spec.gameye.com
+    steps:
+      - run: sudo pip install awscli
+      - attach_workspace: { at: . }
+      - run: >
+          aws s3 cp
+          out/static/index.html
+          s3://$BUCKET/$CIRCLE_TAG/index.html
+          --content-type 'text/html'
+          --cache-control 'max-age=604800'
+      - run: >
+          aws s3 cp
+          out/static/openapi.yaml
+          s3://$BUCKET/$CIRCLE_TAG/openapi.yaml
+          --content-type 'application/vnd.oai.openapi;version=3.0'
+          --cache-control 'max-age=604800'
+      - run: >
+          aws s3 cp
+          out/static/openapi.json
+          s3://$BUCKET/$CIRCLE_TAG/openapi.json
+          --content-type 'application/vnd.oai.openapi+json;version=3.0'
+          --cache-control 'max-age=604800'
+      - run: >
+          aws s3api put-bucket-website
+          --bucket $BUCKET
+          --website-configuration '{
+            "IndexDocument": {"Suffix": "index.html"},
+            "RoutingRules": [
+              {
+                "Condition": {"KeyPrefixEquals": "latest"},
+                "Redirect": {
+                  "HttpRedirectCode": "302",
+                  "ReplaceKeyPrefixWith": "'$CIRCLE_TAG'"
+                }
+              }
+            ]
+          }'
 
 workflows:
   main:
